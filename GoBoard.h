@@ -1,13 +1,9 @@
 #pragma once
+#include "TileState.h"
+#include "Move.h"
 #include <vector>
 
 using namespace std;
-
-enum TileState {
-    NotOccupied,
-    Black,
-    White
-};
 
 class TilePosition {
 public:
@@ -25,16 +21,22 @@ class GoBoard {
 
     int mSize;
     vector<vector<TileState>> mBoardContents;
+    vector<vector<vector<TileState>>> mPreviousBoardStates;
 
 public:
     GoBoard(int size);
+    GoBoard(vector<vector<TileState>> contents, vector<vector<vector<TileState>>> previousBoardStates);
     ~GoBoard();
+    GoBoard Clone();
     void PrintBoard();
     void PrintRow();
     int GetBoardSize() { return mSize; };
+    bool PositionOccupied(int xPos, int yPos);
+    bool MoveResultsInImmediateSelfCapture(Move move);
+    bool MoveResultsInPreviousBoardState(Move move);
 
-    bool ValidMove(TileState playerTile, int xPos, int yPos);
-    void PlaceTile(TileState playerTile, int xPos, int yPos);
+    bool ValidMove(Move move);
+    void MakeMove(Move move);
 
     void EvaluateTileTerritory(int depth, int xPos, int yPos,
         vector<vector<TileState>>& tileTerritories, vector<vector<bool>>& tileEvaluated,
@@ -42,5 +44,8 @@ public:
         TileState& foundWall, TileState& territoryOwner, bool& foundOwner);
 
     vector<vector<TileState>> EvaluateTileTerritories();
+
+    bool EvaluateStringLiberties(int xPos, int yPos, TileState stringState, vector<vector<bool>>& tileCalculated, int depth);
+    void EvaluateLiberties();
     void EvaluatePossibleCaptures();
 };

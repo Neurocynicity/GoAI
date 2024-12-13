@@ -116,6 +116,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,12 +144,15 @@
     <ClCompile Include="GoAI.cpp" />
     <ClCompile Include="GoBoard.cpp" />
     <ClCompile Include="HumanPlayer.cpp" />
+    <ClCompile Include="Move.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
     <ClInclude Include="GoBoard.h" />
     <ClInclude Include="HumanPlayer.h" />
+    <ClInclude Include="Move.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="TileState.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

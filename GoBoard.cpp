@@ -1,4 +1,6 @@
 #include "GoBoard.h"
+#include "TileState.h"
+#include "Move.h"
 #include <math.h>
 #include <vector>
 #include <iostream>
@@ -10,8 +12,17 @@ GoBoard::GoBoard(int size) {
     mBoardContents.assign(size, vector<TileState>(size, NotOccupied));
 }
 
+GoBoard::GoBoard(vector<vector<TileState>> contents, vector<vector<vector<TileState>>> previousBoardStates) {
+    mBoardContents = contents;
+    mPreviousBoardStates = previousBoardStates;
+}
+
 GoBoard::~GoBoard() {
 
+}
+
+GoBoard GoBoard::Clone() {
+    return GoBoard(mBoardContents, mPreviousBoardStates);
 }
 
 void GoBoard::PrintRow() {
@@ -52,9 +63,27 @@ void GoBoard::PrintBoard() {
     PrintRow();
 }
 
-bool GoBoard::ValidMove(TileState playerTile, int xPos, int yPos)
+bool GoBoard::PositionOccupied(int xPos, int yPos) {
+    return mBoardContents[xPos][yPos] != NotOccupied;
+}
+
+bool GoBoard::ValidMove(Move move)
 {
-    return true;
+    return !PositionOccupied(move.xPos, move.yPos)
+        && !MoveResultsInImmediateSelfCapture(move)
+        && !MoveResultsInPreviousBoardState(move);
+}
+
+bool GoBoard::MoveResultsInPreviousBoardState(Move move) {
+    return false;
+}
+
+bool GoBoard::MoveResultsInImmediateSelfCapture(Move move) {
+    GoBoard boardAfterMove = Clone();
+    boardAfterMove.MakeMove(move);
+
+    vector<vector<bool>> tilesCalculated(mSize, vector<bool>(mSize, false));
+    return EvaluateStringLiberties(move.xPos, move.yPos, move.playerTile, tilesCalculated, 0);
 }
 
 void GoBoard::EvaluateTileTerritory(int depth, int xPos, int yPos,
@@ -80,9 +109,6 @@ void GoBoard::EvaluateTileTerritory(int depth, int xPos, int yPos,
                 continue;
             }
 
-            // mark this tile as evaluated to prevent infinate recursion
-            tileEvaluated[newXPos][newYPos] = true;
-
             // if it's empty, add tile to territory and check all their unchecked neighbours
             if (mBoardContents[newXPos][newYPos] == NotOccupied) {
 
@@ -90,6 +116,9 @@ void GoBoard::EvaluateTileTerritory(int depth, int xPos, int yPos,
                 if (tileEvaluated[newXPos][newYPos]) {
                     continue;
                 }
+
+                // mark this tile as evaluated to prevent infinate recursion
+                tileEvaluated[newXPos][newYPos] = true;
 
                 tilesInTerritory.push_back(TilePosition(newXPos, newYPos));
                 EvaluateTileTerritory(depth + 1, newXPos, newYPos, tileTerritories, tileEvaluated, tilesInTerritory, foundWall, territoryOwner, foundOwner);
@@ -99,7 +128,7 @@ void GoBoard::EvaluateTileTerritory(int depth, int xPos, int yPos,
                 foundWall = mBoardContents[newXPos][newYPos];
             }
             // if we've found another wall of a different player
-            else if (tileEvaluated[newXPos][newYPos] != foundWall) {
+            else if (mBoardContents[newXPos][newYPos] != foundWall) {
                 // this territory is unclaimed land, as there are both white and black walls
                 territoryOwner = NotOccupied;
                 foundOwner = true;
@@ -109,12 +138,19 @@ void GoBoard::EvaluateTileTerritory(int depth, int xPos, int yPos,
 
     // only once we've fully explored the territory of the area, we mark who owns it
     if (depth == 0) {
+        tilesInTerritory.push_back(TilePosition(xPos, yPos));
         if (!foundOwner && foundWall != NotOccupied) {
             foundOwner = true;
             territoryOwner = foundWall;
         }
-        else {
-            cout << "ERROR: No owner found for territory!\n";
+
+        if (territoryOwner == NotOccupied) {
+            return;
+        }
+
+        for (TilePosition tile : tilesInTerritory)
+        {
+            tileTerritories[tile.x][tile.y] = territoryOwner;
         }
     }
 }
@@ -144,39 +180,64 @@ vector<vector<TileState>> GoBoard::EvaluateTileTerritories()
     return tileTerritory;
 }
 
-void GoBoard::EvaluatePossibleCaptures()
-{
-    auto tileTerritory = EvaluateTileTerritories();
+bool GoBoard::EvaluateStringLiberties(int xPos, int yPos, TileState stringState,
+    vector<vector<bool>>& tilesCalculated, int depth = 0) {
 
-    cout << "Tile Territories:\n";
+    bool foundLiberty = false;
 
-    PrintRow();
-
-    for (int y = mSize - 1; y >= 0; y--)
+    for (int deltaX = -1; deltaX <= 1; deltaX++)
     {
-        cout << y;
-
-        for (int x = 0; x < mSize; x++)
+        for (int deltaY = -1; deltaY <= 1; deltaY++)
         {
-            if (tileTerritory[x][y] == Black) {
-                cout << "B";
+            // make sure we're only checking the orthoganal vectors
+            // [(-1, 0), (0, -1), (0, 1), (1, 0)]
+            if (abs(deltaX + deltaY) != 1) {
+                continue;
             }
-            else if (tileTerritory[x][y] == White) {
-                cout << "W";
+
+            int newXPos = xPos + deltaX;
+            int newYPos = yPos + deltaY;
+
+            // also skip evaluating tile if it's out of bounds
+            if (newXPos < 0 || newXPos >= mSize ||
+                newYPos < 0 || newYPos >= mSize) {
+                continue;
             }
-            else {
-                cout << "+";
+
+            // if it's the save type as the string, then it's also part of the string
+            if (mBoardContents[newXPos][newYPos] == stringState) {
+                foundLiberty |= EvaluateStringLiberties(newXPos, newYPos, stringState, tilesCalculated, depth + 1);
+            }
+            else if (mBoardContents[newXPos][newYPos] == NotOccupied) {
+
+                foundLiberty = true;
             }
         }
-
-        cout << y << '\n';
     }
 
-    PrintRow();
+    return foundLiberty;
 }
 
-void GoBoard::PlaceTile(TileState playerTile, int xPos, int yPos)
+void GoBoard::EvaluateLiberties()
 {
-    mBoardContents[xPos][yPos] = playerTile;
-    EvaluatePossibleCaptures();
+    vector<vector<bool>> tilesCalculated(mSize, vector<bool>(mSize, false));
+
+    for (int x = 0; x < mSize; x++)
+    {
+        for (int y = 0; y < mSize; y++)
+        {
+            if (mBoardContents[x][y] == NotOccupied || tilesCalculated[x][y]) {
+                continue;
+            }
+
+            EvaluateStringLiberties(x, y, mBoardContents[x][y], tilesCalculated);
+        }
+    }
+}
+
+void GoBoard::MakeMove(Move move)
+{
+    mBoardContents[move.xPos][move.yPos] = move.playerTile;
+
+
 }
