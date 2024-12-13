@@ -4,17 +4,18 @@
 #include <math.h>
 #include <vector>
 #include <iostream>
+#include <stack>
 
 using namespace std;
 
 GoBoard::GoBoard(int size) {
-    mSize = size;
-    mBoardContents.assign(size, vector<TileState>(size, NotOccupied));
+	mSize = size;
+	mBoardContents.assign(size, vector<TileState>(size, NotOccupied));
 }
 
 GoBoard::GoBoard(vector<vector<TileState>> contents, vector<vector<vector<TileState>>> previousBoardStates) {
-    mBoardContents = contents;
-    mPreviousBoardStates = previousBoardStates;
+	mBoardContents = contents;
+	mPreviousBoardStates = previousBoardStates;
 }
 
 GoBoard::~GoBoard() {
@@ -22,222 +23,237 @@ GoBoard::~GoBoard() {
 }
 
 GoBoard GoBoard::Clone() {
-    return GoBoard(mBoardContents, mPreviousBoardStates);
+	return GoBoard(mBoardContents, mPreviousBoardStates);
 }
 
 void GoBoard::PrintRow() {
-    cout << ' ';
+	cout << ' ';
 
-    for (int x = 0; x < mSize; x++)
-    {
-        cout << x;
-    }
+	for (int x = 0; x < mSize; x++)
+	{
+		cout << x;
+	}
 
-    cout << '\n';
+	cout << '\n';
 }
 
 void GoBoard::PrintBoard() {
 
-    PrintRow();
+	PrintRow();
 
-    for (int y = mSize - 1; y >= 0; y--)
-    {
-        cout << y;
+	for (int y = mSize - 1; y >= 0; y--)
+	{
+		cout << y;
 
-        for (int x = 0; x < mSize; x++)
-        {
-            if (mBoardContents[x][y] == Black) {
-                cout << "B";
-            }
-            else if (mBoardContents[x][y] == White) {
-                cout << "W";
-            }
-            else {
-                cout << "+";
-            }
-        }
+		for (int x = 0; x < mSize; x++)
+		{
+			if (mBoardContents[x][y] == Black) {
+				cout << "B";
+			}
+			else if (mBoardContents[x][y] == White) {
+				cout << "W";
+			}
+			else {
+				cout << "+";
+			}
+		}
 
-        cout << y << '\n';
-    }
+		cout << y << '\n';
+	}
 
-    PrintRow();
+	PrintRow();
 }
 
 bool GoBoard::PositionOccupied(int xPos, int yPos) {
-    return mBoardContents[xPos][yPos] != NotOccupied;
+	return mBoardContents[xPos][yPos] != NotOccupied;
 }
 
 bool GoBoard::ValidMove(Move move)
 {
-    return !PositionOccupied(move.xPos, move.yPos)
-        && !MoveResultsInImmediateSelfCapture(move)
-        && !MoveResultsInPreviousBoardState(move);
+	return !PositionOccupied(move.xPos, move.yPos)
+		&& !MoveResultsInImmediateSelfCapture(move)
+		&& !MoveResultsInPreviousBoardState(move);
 }
 
 bool GoBoard::MoveResultsInPreviousBoardState(Move move) {
-    return false;
+	return false;
 }
 
 bool GoBoard::MoveResultsInImmediateSelfCapture(Move move) {
-    GoBoard boardAfterMove = Clone();
-    boardAfterMove.MakeMove(move);
+	GoBoard boardAfterMove = Clone();
+	boardAfterMove.MakeMove(move);
 
-    vector<vector<bool>> tilesCalculated(mSize, vector<bool>(mSize, false));
-    return EvaluateStringLiberties(move.xPos, move.yPos, move.playerTile, tilesCalculated, 0);
+	vector<vector<bool>> tilesCalculated(mSize, vector<bool>(mSize, false));
+	return !EvaluateStringLiberties(move.xPos, move.yPos, move.playerTile, tilesCalculated);
 }
 
 void GoBoard::EvaluateTileTerritory(int depth, int xPos, int yPos,
-    vector<vector<TileState>>& tileTerritories, vector<vector<bool>>& tileEvaluated,
-    vector<TilePosition>& tilesInTerritory, TileState& foundWall, TileState& territoryOwner, bool& foundOwner)
+	vector<vector<TileState>>& tileTerritories, vector<vector<bool>>& tileEvaluated,
+	vector<TilePosition>& tilesInTerritory, TileState& foundWall, TileState& territoryOwner, bool& foundOwner)
 {
-    for (int deltaX = -1; deltaX <= 1; deltaX++)
-    {
-        for (int deltaY = -1; deltaY <= 1; deltaY++)
-        {
-            // make sure we're only checking the orthoganal vectors
-            // [(-1, 0), (0, -1), (0, 1), (1, 0)]
-            if (abs(deltaX + deltaY) != 1) {
-                continue;
-            }
 
-            int newXPos = xPos + deltaX;
-            int newYPos = yPos + deltaY;
-
-            // also skip evaluating tile if it's out of bounds
-            if (newXPos < 0 || newXPos >= mSize ||
-                newYPos < 0 || newYPos >= mSize) {
-                continue;
-            }
-
-            // if it's empty, add tile to territory and check all their unchecked neighbours
-            if (mBoardContents[newXPos][newYPos] == NotOccupied) {
-
-                // skip if the tile has already been calculated
-                if (tileEvaluated[newXPos][newYPos]) {
-                    continue;
-                }
-
-                // mark this tile as evaluated to prevent infinate recursion
-                tileEvaluated[newXPos][newYPos] = true;
-
-                tilesInTerritory.push_back(TilePosition(newXPos, newYPos));
-                EvaluateTileTerritory(depth + 1, newXPos, newYPos, tileTerritories, tileEvaluated, tilesInTerritory, foundWall, territoryOwner, foundOwner);
-            }
-            // if it's the first wall we've found, then we set the found wall to be this one
-            else if (foundWall == NotOccupied) {
-                foundWall = mBoardContents[newXPos][newYPos];
-            }
-            // if we've found another wall of a different player
-            else if (mBoardContents[newXPos][newYPos] != foundWall) {
-                // this territory is unclaimed land, as there are both white and black walls
-                territoryOwner = NotOccupied;
-                foundOwner = true;
-            }
-        }
-    }
-
-    // only once we've fully explored the territory of the area, we mark who owns it
-    if (depth == 0) {
-        tilesInTerritory.push_back(TilePosition(xPos, yPos));
-        if (!foundOwner && foundWall != NotOccupied) {
-            foundOwner = true;
-            territoryOwner = foundWall;
-        }
-
-        if (territoryOwner == NotOccupied) {
-            return;
-        }
-
-        for (TilePosition tile : tilesInTerritory)
-        {
-            tileTerritories[tile.x][tile.y] = territoryOwner;
-        }
-    }
 }
 
 vector<vector<TileState>> GoBoard::EvaluateTileTerritories()
 {
-    vector<vector<TileState>> tileTerritory(mSize, vector<TileState>(mSize, NotOccupied));
-    vector<vector<bool>> tileCalculated(mSize, vector<bool>(mSize, false));
+	vector<vector<TileState>> tileTerritory(mSize, vector<TileState>(mSize, NotOccupied));
+	vector<vector<bool>> tileCalculated(mSize, vector<bool>(mSize, false));
 
-    for (int x = 0; x < mSize; x++)
-    {
-        for (int y = 0; y < mSize; y++)
-        {
-            if (mBoardContents[x][y] != NotOccupied || tileCalculated[x][y]) {
-                continue;
-            }
+	for (int x = 0; x < mSize; x++)
+	{
+		for (int y = 0; y < mSize; y++)
+		{
+			if (mBoardContents[x][y] != NotOccupied || tileCalculated[x][y]) {
+				continue;
+			}
 
-            vector<TilePosition> tilesInTerritory = vector<TilePosition>();
-            TileState foundWall = NotOccupied;
-            TileState territoryOwner = NotOccupied;
-            bool foundOwner = false;
+			vector<TilePosition> tilesInTerritory = vector<TilePosition>();
+			TileState foundWall = NotOccupied;
+			TileState territoryOwner = NotOccupied;
+			bool foundOwner = false;
 
-            EvaluateTileTerritory(0, x, y, tileTerritory, tileCalculated, tilesInTerritory, foundWall, territoryOwner, foundOwner);
-        }
-    }
+			stack<TilePosition> tilesToEvaluate;
 
-    return tileTerritory;
+			while (tilesToEvaluate.size() > 0)
+			{
+				TilePosition position = tilesToEvaluate.top();
+				tilesInTerritory.push_back(position.Clone());
+				tilesToEvaluate.pop();
+
+				for (int deltaX = -1; deltaX <= 1; deltaX++)
+				{
+					for (int deltaY = -1; deltaY <= 1; deltaY++)
+					{
+						// make sure we're only checking the orthoganal vectors
+						// [(-1, 0), (0, -1), (0, 1), (1, 0)]
+						if (abs(deltaX + deltaY) != 1) {
+							continue;
+						}
+
+						int newXPos = position.x + deltaX;
+						int newYPos = position.y + deltaY;
+
+						// also skip evaluating tile if it's out of bounds
+						if (newXPos < 0 || newXPos >= mSize ||
+							newYPos < 0 || newYPos >= mSize) {
+							continue;
+						}
+
+						// if it's empty, add tile to territory and check all their unchecked neighbours
+						if (mBoardContents[newXPos][newYPos] == NotOccupied) {
+
+							// skip if the tile has already been calculated
+							if (tileCalculated[newXPos][newYPos]) {
+								continue;
+							}
+
+							// mark this tile as evaluated to prevent infinate recursion
+							tileCalculated[newXPos][newYPos] = true;
+
+							tilesToEvaluate.push(TilePosition(newXPos, newYPos));
+						}
+						// if it's the first wall we've found, then we set the found wall to be this one
+						else if (foundWall == NotOccupied) {
+							foundWall = mBoardContents[newXPos][newYPos];
+						}
+						// if we've found another wall of a different player
+						else if (mBoardContents[newXPos][newYPos] != foundWall) {
+							// this territory is unclaimed land, as there are both white and black walls
+							territoryOwner = NotOccupied;
+							foundOwner = true;
+						}
+					}
+				}
+			}
+
+			if (!foundOwner && foundWall != NotOccupied) {
+				foundOwner = true;
+				territoryOwner = foundWall;
+			}
+
+			if (territoryOwner != NotOccupied) {
+				for (TilePosition tile : tilesInTerritory)
+				{
+					tileTerritory[tile.x][tile.y] = territoryOwner;
+				}
+			}
+		}
+	}
+
+	return tileTerritory;
 }
 
-bool GoBoard::EvaluateStringLiberties(int xPos, int yPos, TileState stringState,
-    vector<vector<bool>>& tilesCalculated, int depth = 0) {
+bool GoBoard::EvaluateStringLiberties(int xPos, int yPos, TileState stringState, vector<vector<bool>>& tilesCalculated) {
 
-    bool foundLiberty = false;
+	bool foundLiberty = false;
+	vector<TilePosition> tilesInString;
+	stack<TilePosition> positionsToEvaluate;
+	positionsToEvaluate.push(TilePosition(xPos, yPos));
 
-    for (int deltaX = -1; deltaX <= 1; deltaX++)
-    {
-        for (int deltaY = -1; deltaY <= 1; deltaY++)
-        {
-            // make sure we're only checking the orthoganal vectors
-            // [(-1, 0), (0, -1), (0, 1), (1, 0)]
-            if (abs(deltaX + deltaY) != 1) {
-                continue;
-            }
+	while (positionsToEvaluate.size() > 0)
+	{
+		TilePosition position = positionsToEvaluate.top();
+		tilesInString.push_back(position.Clone());
+		positionsToEvaluate.pop();
 
-            int newXPos = xPos + deltaX;
-            int newYPos = yPos + deltaY;
+		for (int deltaX = -1; deltaX <= 1; deltaX++)
+		{
+			for (int deltaY = -1; deltaY <= 1; deltaY++)
+			{
+				// make sure we're only checking the orthoganal vectors
+				// [(-1, 0), (0, -1), (0, 1), (1, 0)]
+				if (abs(deltaX + deltaY) != 1) {
+					continue;
+				}
 
-            // also skip evaluating tile if it's out of bounds
-            if (newXPos < 0 || newXPos >= mSize ||
-                newYPos < 0 || newYPos >= mSize) {
-                continue;
-            }
+				int newXPos = position.x + deltaX;
+				int newYPos = position.y + deltaY;
 
-            // if it's the save type as the string, then it's also part of the string
-            if (mBoardContents[newXPos][newYPos] == stringState) {
-                foundLiberty |= EvaluateStringLiberties(newXPos, newYPos, stringState, tilesCalculated, depth + 1);
-            }
-            else if (mBoardContents[newXPos][newYPos] == NotOccupied) {
+				// also skip evaluating tile if it's out of bounds
+				if (newXPos < 0 || newXPos >= mSize ||
+					newYPos < 0 || newYPos >= mSize) {
+					continue;
+				}
 
-                foundLiberty = true;
-            }
-        }
-    }
+				// if it's the save type as the string, then it's also part of the string
+				if (mBoardContents[newXPos][newYPos] == stringState) {
+					positionsToEvaluate.push(TilePosition(newXPos, newYPos));
+				}
+				else if (mBoardContents[newXPos][newYPos] == NotOccupied) {
+					foundLiberty = true;
+				}
+			}
+		}
+	}
 
-    return foundLiberty;
+	if (!foundLiberty) {
+		for (TilePosition position : tilesInString) {
+			mBoardContents[position.x][position.y] = NotOccupied;
+		}
+	}
+
+	return foundLiberty;
 }
 
 void GoBoard::EvaluateLiberties()
 {
-    vector<vector<bool>> tilesCalculated(mSize, vector<bool>(mSize, false));
+	stack<TilePosition> tilesToEvaluate;
+	vector<vector<bool>> tilesCalculated(mSize, vector<bool>(mSize, false));
 
-    for (int x = 0; x < mSize; x++)
-    {
-        for (int y = 0; y < mSize; y++)
-        {
-            if (mBoardContents[x][y] == NotOccupied || tilesCalculated[x][y]) {
-                continue;
-            }
+	for (int x = 0; x < mSize; x++)
+	{
+		for (int y = 0; y < mSize; y++)
+		{
+			if (mBoardContents[x][y] == NotOccupied || tilesCalculated[x][y]) {
+				continue;
+			}
 
-            EvaluateStringLiberties(x, y, mBoardContents[x][y], tilesCalculated);
-        }
-    }
+			EvaluateStringLiberties(x, y, mBoardContents[x][y], tilesCalculated);
+		}
+	}
 }
 
 void GoBoard::MakeMove(Move move)
 {
-    mBoardContents[move.xPos][move.yPos] = move.playerTile;
-
-
+	mBoardContents[move.xPos][move.yPos] = move.playerTile;
 }

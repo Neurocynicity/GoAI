@@ -1,21 +1,10 @@
 #pragma once
 #include "TileState.h"
 #include "Move.h"
+#include "TilePosition.h"
 #include <vector>
 
 using namespace std;
-
-class TilePosition {
-public:
-    int x;
-    int y;
-
-    TilePosition(int _x, int _y) {
-        x = _x;
-        y = _y;
-    };
-    ~TilePosition() {};
-};
 
 class GoBoard {
 
@@ -45,7 +34,7 @@ public:
 
     vector<vector<TileState>> EvaluateTileTerritories();
 
-    bool EvaluateStringLiberties(int xPos, int yPos, TileState stringState, vector<vector<bool>>& tileCalculated, int depth);
+    bool EvaluateStringLiberties(int xPos, int yPos, TileState stringState, vector<vector<bool>>& tileCalculated);
     void EvaluateLiberties();
     void EvaluatePossibleCaptures();
 };

@@ -4,7 +4,7 @@
 class Player {
 public:
     TileState playerTile;
-    Player() {};
+    Player() { playerTile = Black; };
     ~Player() {};
     virtual void MakeMove(GoBoard& goBoard) = 0;
 };

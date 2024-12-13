@@ -16,6 +16,6 @@ public:
 		xPos = _xPos;
 		yPos = _yPos;
 	}
-	~Move();
+	~Move() {};
 };
 
