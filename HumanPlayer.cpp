@@ -5,10 +5,11 @@
 
 using namespace std;
 
-void HumanPlayer::MakeMove(GoBoard& goBoard) {
+bool HumanPlayer::MakeMove(GoBoard& goBoard) {
 
     int boardSize = goBoard.GetBoardSize();
     int xPos = -1, yPos = -1;
+    string input;
 
     Move move;
     bool moveValid = true;
@@ -21,10 +22,24 @@ void HumanPlayer::MakeMove(GoBoard& goBoard) {
             cout << "Invalid position: " + reason + "\nPlease input a value:\n-On the board\n-Not occupied by a stone\n-That doesn't repeat a board state\n-That doesn't result in immediate self-capture.\n";
         }
         repeated = true;
-        cout << "\nIt's your turn!\n Please input a valid coordinate on the grid to place your tile:\nX position:";
-        cin >> xPos;
+        cout << "\nIt's your turn!\n Please input a valid coordinate on the grid to place your tile or pass to pass your turn:\nX position:";
+        cin >> input;
+        try {
+            xPos = stoi(input);
+        }
+        catch (invalid_argument x) { }
+
+        if (input == "pass") {
+            return false;
+        }
+
         cout << "\nY position:";
-        cin >> yPos;
+        cin >> input;
+        try {
+            yPos = stoi(input);
+        }
+        catch (invalid_argument x) {}
+
         cout << "\n";
 
         move = Move(playerTile, xPos, yPos);
@@ -45,4 +60,5 @@ void HumanPlayer::MakeMove(GoBoard& goBoard) {
     } while (!moveValid);
 
     goBoard.MakeMove(move);
+    return true;
 }

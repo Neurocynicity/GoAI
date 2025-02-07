@@ -15,7 +15,7 @@ class GoBoard {
 public:
     GoBoard(int size);
     GoBoard(vector<vector<TileState>> contents, vector<vector<vector<TileState>>> previousBoardStates);
-    ~GoBoard();
+    ~GoBoard() {};
     GoBoard Clone();
     void PrintBoard();
     void PrintRow();
@@ -37,4 +37,6 @@ public:
     bool EvaluateStringLiberties(int xPos, int yPos, TileState stringState, vector<vector<bool>>& tileCalculated);
     void EvaluateLiberties();
     void EvaluatePossibleCaptures();
+
+    vector<Move> GetAllValidMoves(TileState colourToGetMovesFor);
 };

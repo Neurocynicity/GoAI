@@ -18,32 +18,37 @@ GoBoard::GoBoard(vector<vector<TileState>> contents, vector<vector<vector<TileSt
 	mPreviousBoardStates = previousBoardStates;
 }
 
-GoBoard::~GoBoard() {
-
-}
-
 GoBoard GoBoard::Clone() {
 	return GoBoard(mBoardContents, mPreviousBoardStates);
 }
 
 void GoBoard::PrintRow() {
-	cout << ' ';
+	cout << "  ";
 
 	for (int x = 0; x < mSize; x++)
 	{
-		cout << x;
+		cout << x << '-';
 	}
 
-	cout << '\n';
+	cout << "\n";
 }
 
 void GoBoard::PrintBoard() {
 
 	PrintRow();
 
+	cout << "  ";
+
+	for (int x = 0; x < mSize; x++)
+	{
+		cout << '|' << ' ';
+	}
+
+	cout << '\n';
+
 	for (int y = mSize - 1; y >= 0; y--)
 	{
-		cout << y;
+		cout << y << ' ';
 
 		for (int x = 0; x < mSize; x++)
 		{
@@ -56,10 +61,21 @@ void GoBoard::PrintBoard() {
 			else {
 				cout << "+";
 			}
+
+			cout << '-';
 		}
 
 		cout << y << '\n';
 	}
+
+	cout << "  ";
+
+	for (int x = 0; x < mSize; x++)
+	{
+		cout << '|' << ' ';
+	}
+
+	cout << '\n';
 
 	PrintRow();
 }
@@ -196,6 +212,8 @@ bool GoBoard::EvaluateStringLiberties(int xPos, int yPos, TileState stringState,
 		tilesInString.push_back(position.Clone());
 		positionsToEvaluate.pop();
 
+		tilesCalculated[position.x][position.y] = true;
+
 		for (int deltaX = -1; deltaX <= 1; deltaX++)
 		{
 			for (int deltaY = -1; deltaY <= 1; deltaY++)
@@ -216,7 +234,8 @@ bool GoBoard::EvaluateStringLiberties(int xPos, int yPos, TileState stringState,
 				}
 
 				// if it's the save type as the string, then it's also part of the string
-				if (mBoardContents[newXPos][newYPos] == stringState) {
+				if (mBoardContents[newXPos][newYPos] == stringState &&
+					!tilesCalculated[newXPos][newYPos]) {
 					positionsToEvaluate.push(TilePosition(newXPos, newYPos));
 				}
 				else if (mBoardContents[newXPos][newYPos] == NotOccupied) {
@@ -256,4 +275,22 @@ void GoBoard::EvaluateLiberties()
 void GoBoard::MakeMove(Move move)
 {
 	mBoardContents[move.xPos][move.yPos] = move.playerTile;
+}
+
+vector<Move> GoBoard::GetAllValidMoves(TileState colourToGetMovesFor) {
+	vector<Move> validMoves;
+
+	validMoves.push_back(Move(colourToGetMovesFor, true));
+
+	for (int x = 0; x < mSize; x++)
+	{
+		for (int y = 0; y < mSize; y++)
+		{
+			Move move = Move(colourToGetMovesFor, x, y);
+			if (ValidMove(move))
+				validMoves.push_back(move);
+		}
+	}
+
+	return validMoves;
 }

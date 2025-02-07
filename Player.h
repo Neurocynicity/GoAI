@@ -6,5 +6,5 @@ public:
     TileState playerTile;
     Player() { playerTile = Black; };
     ~Player() {};
-    virtual void MakeMove(GoBoard& goBoard) = 0;
+    virtual bool MakeMove(GoBoard& goBoard) = 0;
 };

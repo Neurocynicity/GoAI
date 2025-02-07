@@ -1,9 +1,8 @@
-#pragma once
+
 #include "Player.h"
-class HumanPlayer :
+class AIMonteCarloPlayer :
     public Player
 {
 public:
     bool MakeMove(GoBoard& goBoard);
 };
-

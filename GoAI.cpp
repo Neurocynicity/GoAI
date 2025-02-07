@@ -1,8 +1,8 @@
 // GoAI.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 
 #include <iostream>
 #include "HumanPlayer.h"
+#include "AIRandomPlayer.h"
 #include "Game.h"
 
 using namespace std;
@@ -12,8 +12,8 @@ int main() {
 
     int boardSize = 9;
 
-    HumanPlayer player1;
-    HumanPlayer player2;
+    AIRandomPlayer player1;
+    AIRandomPlayer player2;
 
     Game game = Game(player1, player2, boardSize);
 

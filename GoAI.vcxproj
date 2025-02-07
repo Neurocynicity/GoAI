@@ -140,6 +140,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AIMonteCarloPlayer.cpp" />
+    <ClCompile Include="AIMonteCarloTreeNode.cpp" />
+    <ClCompile Include="AIRandomPlayer.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GoAI.cpp" />
     <ClCompile Include="GoBoard.cpp" />
@@ -148,6 +151,9 @@
     <ClCompile Include="TilePosition.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AIMonteCarloPlayer.h" />
+    <ClInclude Include="AIMonteCarloTreeNode.h" />
+    <ClInclude Include="AIRandomPlayer.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GoBoard.h" />
     <ClInclude Include="HumanPlayer.h" />

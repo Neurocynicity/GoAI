@@ -1,6 +1,6 @@
 #pragma once
 #include "Player.h"
-class HumanPlayer :
+class AIRandomPlayer :
     public Player
 {
 public:

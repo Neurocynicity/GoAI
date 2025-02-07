@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GoAI", "GoAI.vcxproj", "{B469FBA8-98AC-43CA-A88C-6BC25471F470}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GoAITestProject", "..\GoAITestProject\GoAITestProject.vcxproj", "{28DBB911-B311-4248-AF97-FA60DB95AF47}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{B469FBA8-98AC-43CA-A88C-6BC25471F470}.Release|x64.Build.0 = Release|x64
 		{B469FBA8-98AC-43CA-A88C-6BC25471F470}.Release|x86.ActiveCfg = Release|Win32
 		{B469FBA8-98AC-43CA-A88C-6BC25471F470}.Release|x86.Build.0 = Release|Win32
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Debug|x64.ActiveCfg = Debug|x64
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Debug|x64.Build.0 = Debug|x64
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Debug|x86.ActiveCfg = Debug|Win32
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Debug|x86.Build.0 = Debug|Win32
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Release|x64.ActiveCfg = Release|x64
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Release|x64.Build.0 = Release|x64
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Release|x86.ActiveCfg = Release|Win32
+		{28DBB911-B311-4248-AF97-FA60DB95AF47}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
